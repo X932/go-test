@@ -1,6 +1,7 @@
 package user_repository
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
@@ -8,12 +9,14 @@ import (
 	database "test-go/internal/db"
 	"test-go/pkg/config"
 	"testing"
+	"time"
 
 	"github.com/joho/godotenv"
 	"go.uber.org/fx"
 )
 
 const TEST_ENV_PATH = "../../../.env.test"
+const PATH_TO_MAIN = "../../../"
 
 var testUserRepo Repo
 var testDB *sql.DB
@@ -33,11 +36,24 @@ func TestMain(m *testing.M) {
 		fx.Populate(&testUserRepo, &testDB, &testConfig),
 	)
 
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	if err := testApp.Start(ctx); err != nil {
+		panic(err.Error())
+	}
+
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		testApp.Stop(ctx)
+	}()
+
 	if err := runTestMigrations(); err != nil {
 		panic("======= Migration failed: " + err.Error() + " =======")
 	}
 
-	fmt.Println("======= Migration successful  =======")
+	fmt.Println("======= Migration successful =======")
 
 	exitCode := m.Run()
 	os.Exit(exitCode)
@@ -45,7 +61,7 @@ func TestMain(m *testing.M) {
 
 func runTestMigrations() error {
 
-	if err := os.Chdir("../../../"); err != nil {
+	if err := os.Chdir(PATH_TO_MAIN); err != nil {
 		return err
 	}
 
