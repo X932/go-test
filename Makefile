@@ -1,3 +1,5 @@
+include .env
+
 # app
 run-app:
 	go run cmd/server/main.go
@@ -5,7 +7,7 @@ test:
 	go test -v ./...
 
 # DB
-DB_URL=postgres://postgres:Zdarova1@localhost:5432/postgres?sslmode=disable
+DB_URL ?= $(DATABASE_URL)
 
 NAME :=
 
@@ -16,4 +18,7 @@ endif
 	migrate create -ext sql -dir internal/db/migrations -seq $(NAME)
 
 migrate:
+ifndef DB_URL
+	$(error DB_URL is not set: Usage make migrate DB_URL=test_db_url)
+endif
 	migrate -database $(DB_URL) -path internal/db/migrations up
