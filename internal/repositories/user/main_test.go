@@ -60,7 +60,6 @@ func TestMain(m *testing.M) {
 }
 
 func runTestMigrations() error {
-
 	if err := os.Chdir(PATH_TO_MAIN); err != nil {
 		return err
 	}
