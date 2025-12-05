@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	article_handler "test-go/internal/http/handlers/article"
 	auth_handler "test-go/internal/http/handlers/auth"
 	user_handler "test-go/internal/http/handlers/user"
 	"test-go/internal/http/middlewares"
@@ -19,10 +20,11 @@ var Module = fx.Invoke(NewHttpServer)
 type Params struct {
 	fx.In
 	fx.Lifecycle
-	UserHandler   user_handler.Handler
-	AuthHandler   auth_handler.Handler
-	MiddlewareSet middlewares.MiddlewareSet
-	Config        *config.Config
+	UserHandler    user_handler.Handler
+	AuthHandler    auth_handler.Handler
+	ArticleHandler article_handler.Handler
+	MiddlewareSet  middlewares.MiddlewareSet
+	Config         *config.Config
 }
 
 func NewHttpServer(p Params) *http.Server {
@@ -41,6 +43,7 @@ func NewHttpServer(p Params) *http.Server {
 		protected.POST("/users", p.UserHandler.CreateUser)
 		protected.PUT("/users", p.UserHandler.UpdateUser)
 		protected.DELETE("/users/:id", p.UserHandler.DeleteUser)
+		protected.POST("/articles", p.ArticleHandler.Create)
 	}
 
 	srv := &http.Server{
