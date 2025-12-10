@@ -89,6 +89,8 @@ func (r *repo) GetUsers(rowsLimit, rowsOffset int) ([]User, error) {
 		return nil, fmt.Errorf("%w", err)
 	}
 
+	defer rows.Close()
+
 	var users []User
 
 	for rows.Next() {

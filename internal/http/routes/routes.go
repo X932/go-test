@@ -44,6 +44,7 @@ func NewHttpServer(p Params) *http.Server {
 		protected.PUT("/users", p.UserHandler.UpdateUser)
 		protected.DELETE("/users/:id", p.UserHandler.DeleteUser)
 		protected.POST("/articles", p.ArticleHandler.Create)
+		protected.GET("/articles", p.ArticleHandler.GetArticles)
 	}
 
 	srv := &http.Server{

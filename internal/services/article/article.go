@@ -1,6 +1,7 @@
 package article_service
 
 import (
+	"fmt"
 	article_repository "test-go/internal/repositories/article"
 
 	"go.uber.org/fx"
@@ -19,6 +20,7 @@ type service struct {
 
 type Service interface {
 	Create(article CreateParam) error
+	GetArticles() []article_repository.Article
 }
 
 func NewModule(p Params) Service {
@@ -45,4 +47,15 @@ func (s *service) Create(article CreateParam) error {
 	}
 
 	return nil
+}
+
+func (s *service) GetArticles() []article_repository.Article {
+	articles, err := s.articleRepo.GetArticles()
+
+	if err != nil {
+		fmt.Println("==== repo error", err)
+		return nil
+	}
+
+	return articles
 }

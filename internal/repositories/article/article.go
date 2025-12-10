@@ -12,6 +12,7 @@ var Module = fx.Provide(NewModule)
 
 type Repo interface {
 	Create(params CreateParam) error
+	GetArticles() ([]Article, error)
 }
 
 type Params struct {
@@ -28,6 +29,20 @@ type CreateParam struct {
 	Content string
 	Tags    []string
 	OwnerId int
+}
+
+type owner struct {
+	ID        int
+	FirstName string
+	LastName  string
+}
+
+type Article struct {
+	ID      int
+	Title   string
+	Content string
+	Tags    []byte
+	Owner   owner
 }
 
 func NewModule(p Params) Repo {
@@ -64,4 +79,43 @@ func (r *repo) Create(params CreateParam) error {
 	}
 
 	return nil
+}
+
+func (r *repo) GetArticles() ([]Article, error) {
+	rows, err := r.db.Query(`
+		select
+			a.id as article_id,
+			a.title as article_title,
+			a.content as article_content,
+			a.tags as article_tags,
+			o.id as user_id,
+			o.first_name as user_first_name,
+			o.last_name as user_last_name
+		from article a
+		left join "user" o on o.id = a.owner_id;
+	`)
+
+	var articles []Article
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var article Article
+		var owner owner
+
+		if err := rows.Scan(
+			&article.ID, &article.Title, &article.Content, &article.Tags,
+			&owner.ID, &owner.FirstName, &owner.LastName); err != nil {
+			return nil, err
+		}
+
+		article.Owner = owner
+		articles = append(articles, article)
+	}
+
+	return articles, nil
 }

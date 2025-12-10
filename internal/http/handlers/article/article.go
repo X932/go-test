@@ -1,11 +1,13 @@
 package article_handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"test-go/internal/response"
 	article_service "test-go/internal/services/article"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 )
@@ -19,6 +21,7 @@ type Params struct {
 
 type Handler interface {
 	Create(c *gin.Context)
+	GetArticles(c *gin.Context)
 }
 
 type handler struct {
@@ -29,6 +32,20 @@ type CreateArticleDto struct {
 	Title   string   `json:"title"`
 	Content string   `json:"content"`
 	OwnerId int      `json:"owner_id"`
+	Tags    []string `json:"tags"`
+}
+
+type ownerDto struct {
+	ID        int    `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
+
+type articleDto struct {
+	ID      int      `json:"id"`
+	Title   string   `json:"title"`
+	Content string   `json:"content"`
+	Owner   ownerDto `json:"owner"`
 	Tags    []string `json:"tags"`
 }
 
@@ -75,4 +92,28 @@ func (h *handler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, response.Body{Message: "Success"})
+}
+
+func (h *handler) GetArticles(c *gin.Context) {
+	res := h.articleService.GetArticles()
+
+	var articles []articleDto
+
+	for _, a := range res {
+		var tags []string
+
+		if err := sonic.Unmarshal(a.Tags, &tags); err != nil {
+			fmt.Println("===== error unmarshal tags", err)
+		}
+
+		articles = append(articles, articleDto{
+			ID:      a.ID,
+			Title:   a.Title,
+			Content: a.Content,
+			Tags:    tags,
+			Owner:   ownerDto(a.Owner),
+		})
+	}
+
+	c.JSON(http.StatusOK, response.Body{Message: "Success", Payload: articles})
 }
