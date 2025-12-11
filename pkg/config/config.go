@@ -1,8 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/joho/godotenv"
 	"go.uber.org/fx"
 )
 
@@ -16,6 +18,12 @@ type Config struct {
 }
 
 func LoadConfig() *Config {
+	err := godotenv.Load()
+
+	if err != nil {
+		fmt.Println("Warning: No .env file found. Relying on OS environment.")
+	}
+
 	return &Config{
 		DB_URL:     os.Getenv("DATABASE_URL"),
 		APP_PORT:   os.Getenv("APP_PORT"),
